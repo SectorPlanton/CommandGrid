@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>COMMAND GRID — Tactical Warfare</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Share+Tech+Mono&family=Oswald:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --camo-dark:    #1a1f0e;
+  --camo-1:       #2d3318;
+  --camo-2:       #3d4a22;
+  --camo-3:       #4a5a28;
+  --camo-4:       #5c6b30;
+  --camo-tan:     #8a7a4a;
+  --camo-mud:     #6b5a35;
+  --camo-shadow:  #0d1008;
+  --olive:        #7a8c3a;
+  --olive-bright: #a8bc50;
+  --amber:        #d4900a;
+  --amber-bright: #f0b020;
+  --red-danger:   #c02020;
+  --red-alert:    #ff3333;
+  --blue-ally:    #3a7a5c;
+  --blue-bright:  #50c890;
+  --enemy-red:    #8c3030;
+  --enemy-bright: #d44040;
+  --text-primary: #c8c090;
+  --text-bright:  #e8d8a0;
+  --text-dim:     #5a5840;
+  --text-label:   #9a9060;
+  --panel-bg:     rgba(20,24,12,0.97);
+  --panel-border: #3a4020;
+  --fog-color:    rgba(10,12,5,0.93);
+  --cell-size:    70px;
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{width:100%;height:100%;background:var(--camo-dark);color:var(--text-primary);font-family:'Oswald',sans-serif;overflow:hidden;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;}
+
+body::after{content:'';position:fixed;inset:0;background-image:radial-gradient(ellipse 120px 80px at 15% 20%,rgba(45,51,24,0.5) 0%,transparent 100%),radial-gradient(ellipse 90px 140px at 70% 10%,rgba(30,35,15,0.4) 0%,transparent 100%),radial-gradient(ellipse 160px 60px at 40% 60%,rgba(58,74,34,0.35) 0%,transparent 100%),radial-gradient(ellipse 80px 120px at 85% 75%,rgba(40,47,20,0.4) 0%,transparent 100%),radial-gradient(ellipse 200px 90px at 20% 85%,rgba(50,62,28,0.35) 0%,transparent 100%);pointer-events:none;z-index:0;}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.07) 3px,rgba(0,0,0,0.07) 4px);pointer-events:none;z-index:9999;}
+
+/* ── PORTRAIT LOCK ── */
+#portrait-lock{display:none;position:fixed;inset:0;background:var(--camo-dark);z-index:99999;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:2rem;}
+#portrait-lock .ri{font-size:5rem;animation:ri-anim 2s ease-in-out infinite;margin-bottom:1.5rem;}
+@keyframes ri-anim{0%,100%{transform:rotate(0deg);}50%{transform:rotate(90deg);}}
+#portrait-lock h2{font-family:'Black Ops One',cursive;font-size:1.5rem;letter-spacing:0.15em;color:var(--amber-bright);margin-bottom:0.75rem;}
+#portrait-lock p{font-size:0.9rem;color:var(--text-label);letter-spacing:0.08em;line-height:1.6;}
+@media (orientation:portrait) and (max-width:900px){#portrait-lock{display:flex;}}
+
+#screen{width:100vw;height:100vh;display:flex;flex-direction:column;position:relative;overflow:hidden;z-index:1;}
+
+/* ══ TITLE ══ */
+#title-screen{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--camo-dark);z-index:100;overflow:hidden;}
+.camo-bg{position:absolute;inset:0;overflow:hidden;}
+.cb{position:absolute;border-radius:40% 60% 55% 45%;opacity:0.17;animation:blob 18s ease-in-out infinite;}
+.cb:nth-child(1){width:35%;height:40%;top:-5%;left:-5%;background:var(--camo-3);animation-delay:0s;}
+.cb:nth-child(2){width:45%;height:30%;top:20%;right:-10%;background:var(--camo-mud);animation-delay:-6s;border-radius:55% 45% 40% 60%;}
+.cb:nth-child(3){width:30%;height:45%;bottom:-10%;left:20%;background:var(--camo-2);animation-delay:-12s;border-radius:45% 55% 60% 40%;}
+.cb:nth-child(4){width:25%;height:35%;bottom:10%;right:5%;background:var(--camo-4);animation-delay:-4s;}
+.cb:nth-child(5){width:40%;height:25%;top:50%;left:30%;background:var(--camo-tan);animation-delay:-9s;border-radius:60% 40% 50% 50%;}
+@keyframes blob{0%,100%{transform:translate(0,0) scale(1) rotate(0deg);}33%{transform:translate(3%,4%) scale(1.05) rotate(5deg);}66%{transform:translate(-2%,-3%) scale(0.97) rotate(-4deg);}}
+.tgrid{position:absolute;inset:0;background-image:linear-gradient(rgba(120,140,60,0.05) 1px,transparent 1px),linear-gradient(90deg,rgba(120,140,60,0.05) 1px,transparent 1px);background-size:50px 50px;}
+.cdeco{position:absolute;width:80px;height:80px;border-color:var(--olive);border-style:solid;opacity:0.45;}
+.cdeco.tl{top:20px;left:20px;border-width:2px 0 0 2px;}
+.cdeco.tr{top:20px;right:20px;border-width:2px 2px 0 0;}
+.cdeco.bl{bottom:20px;left:20px;border-width:0 0 2px 2px;}
+.cdeco.br{bottom:20px;right:20px;border-width:0 2px 2px 0;}
+.tc{position:relative;z-index:2;text-align:center;display:flex;flex-direction:column;align-items:center;}
+.t-emblem{width:95px;height:95px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:3.2rem;background:radial-gradient(circle,rgba(58,74,34,0.9) 0%,rgba(20,24,12,0.95) 100%);border:3px solid var(--olive);box-shadow:0 0 30px rgba(120,140,60,0.3),inset 0 0 20px rgba(0,0,0,0.5);margin-bottom:1.3rem;animation:emb-pulse 4s ease-in-out infinite;}
+@keyframes emb-pulse{0%,100%{box-shadow:0 0 30px rgba(120,140,60,0.3),inset 0 0 20px rgba(0,0,0,0.5);}50%{box-shadow:0 0 55px rgba(168,188,80,0.5),inset 0 0 20px rgba(0,0,0,0.5);}}
+.t-logo{font-family:'Black Ops One',cursive;font-size:clamp(2.8rem,9vw,6.5rem);letter-spacing:0.08em;color:var(--amber-bright);text-shadow:0 2px 0 rgba(0,0,0,0.8),0 0 40px rgba(212,144,10,0.4),2px 2px 0 var(--camo-mud);line-height:0.95;}
+.t-logo span{color:var(--olive-bright);}
+.t-sub{font-family:'Share Tech Mono',monospace;font-size:clamp(0.55rem,1.5vw,0.82rem);letter-spacing:0.45em;color:var(--text-label);margin-top:0.6rem;border-top:1px solid rgba(120,140,60,0.3);border-bottom:1px solid rgba(120,140,60,0.3);padding:0.3rem 1rem;}
+.t-tag{margin-top:1rem;font-size:0.86rem;color:var(--text-dim);letter-spacing:0.05em;max-width:400px;line-height:1.7;font-weight:300;}
+.menu-btns{margin-top:2.2rem;display:flex;flex-direction:column;gap:0.75rem;align-items:center;}
+.t-version{position:absolute;bottom:1rem;right:1.5rem;font-family:'Share Tech Mono',monospace;font-size:0.58rem;color:var(--text-dim);letter-spacing:0.1em;}
+.t-class{position:absolute;bottom:1rem;left:50%;transform:translateX(-50%);font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:var(--red-danger);letter-spacing:0.2em;border:1px solid var(--red-danger);padding:0.12rem 0.6rem;opacity:0.7;}
+
+/* ── BUTTONS ── */
+.btn{font-family:'Black Ops One',cursive;font-size:0.82rem;letter-spacing:0.18em;text-transform:uppercase;padding:0.78rem 2rem;background:linear-gradient(180deg,rgba(58,74,34,0.9) 0%,rgba(30,38,16,0.95) 100%);border:1px solid var(--olive);border-bottom:3px solid var(--camo-shadow);color:var(--text-bright);cursor:pointer;position:relative;overflow:hidden;transition:all 0.2s;clip-path:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,14px 100%,0 calc(100% - 14px));min-width:255px;text-shadow:0 1px 2px rgba(0,0,0,0.8);}
+.btn::before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(168,188,80,0.15) 0%,transparent 100%);transform:translateY(-100%);transition:transform 0.25s;}
+.btn:hover::before{transform:translateY(0);}
+.btn:hover{border-color:var(--olive-bright);color:#fff;box-shadow:0 4px 20px rgba(120,140,60,0.3);transform:translateY(-2px);}
+.btn:active{transform:translateY(0);}
+.btn.btn-danger{border-color:var(--red-danger);background:linear-gradient(180deg,rgba(120,30,30,0.9) 0%,rgba(60,15,15,0.95) 100%);}
+.btn.btn-danger:hover{border-color:var(--red-alert);box-shadow:0 4px 20px rgba(200,30,30,0.3);}
+.btn.btn-ally{border-color:var(--blue-ally);background:linear-gradient(180deg,rgba(30,80,55,0.9) 0%,rgba(15,45,30,0.95) 100%);}
+.btn.btn-ally:hover{border-color:var(--blue-bright);box-shadow:0 4px 20px rgba(50,180,100,0.3);}
+
+/* ══ MODE SCREEN ══ */
+#mode-screen{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;background:var(--camo-dark);z-index:100;overflow:hidden;}
+#mode-screen .inner{position:relative;z-index:2;text-align:center;}
+.mode-cards{display:flex;gap:1.2rem;margin-top:2rem;flex-wrap:wrap;justify-content:center;}
+.mode-card{width:190px;border:1px solid var(--panel-border);border-bottom:3px solid var(--camo-shadow);background:linear-gradient(160deg,rgba(35,42,20,0.97) 0%,rgba(20,25,12,0.97) 100%);padding:1.4rem 1rem;cursor:pointer;transition:all 0.3s;clip-path:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,0 100%);text-align:left;}
+.mode-card:hover{border-color:var(--olive-bright);box-shadow:0 8px 30px rgba(120,140,60,0.25),inset 0 0 30px rgba(120,140,60,0.05);transform:translateY(-4px);}
+.mode-card .ico{font-size:2.1rem;margin-bottom:0.7rem;display:block;}
+.mode-card h3{font-family:'Black Ops One',cursive;font-size:0.75rem;letter-spacing:0.1em;color:var(--amber-bright);margin-bottom:0.35rem;}
+.mode-card p{font-size:0.7rem;color:var(--text-dim);line-height:1.5;font-weight:300;}
+.mode-card .diff{margin-top:0.45rem;font-family:'Share Tech Mono',monospace;font-size:0.58rem;color:var(--olive-bright);letter-spacing:0.05em;}
+
+/* ══ GAME SCREEN ══ */
+#game-screen{display:none;width:100%;height:100%;flex-direction:column;position:relative;z-index:1;}
+
+/* ── TOP HUD ── */
+#top-hud{display:flex;align-items:stretch;justify-content:space-between;background:linear-gradient(180deg,rgba(12,15,6,0.99) 0%,rgba(20,24,12,0.95) 100%);border-bottom:2px solid var(--panel-border);flex-shrink:0;height:74px;position:relative;}
+#top-hud::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--olive),transparent);}
+.hud-player{display:flex;align-items:center;gap:0.7rem;padding:0.4rem 0.9rem;flex-shrink:0;min-width:240px;position:relative;overflow:hidden;}
+.hud-player.p1{background:linear-gradient(135deg,rgba(25,38,20,0.85) 0%,rgba(12,18,8,0.9) 100%);border-right:1px solid var(--panel-border);}
+.hud-player.p2{background:linear-gradient(225deg,rgba(38,18,15,0.85) 0%,rgba(18,10,8,0.9) 100%);border-left:1px solid var(--panel-border);}
+.hud-player::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--olive);opacity:0;transition:opacity 0.3s;}
+.hud-player.p2::before{background:var(--enemy-red);}
+.hud-player.active::before{opacity:1;}
+.p-badge{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;border:2px solid;}
+.p1 .p-badge{background:rgba(35,60,35,0.9);border-color:var(--blue-ally);box-shadow:0 0 12px rgba(50,180,100,0.3);}
+.p2 .p-badge{background:rgba(60,22,22,0.9);border-color:var(--enemy-red);box-shadow:0 0 12px rgba(180,50,50,0.3);}
+.p-info{flex:1;min-width:0;}
+.p-rank{font-family:'Share Tech Mono',monospace;font-size:0.55rem;letter-spacing:0.05em;color:var(--text-dim);margin-bottom:1px;}
+.p-name{font-family:'Black Ops One',cursive;font-size:0.72rem;letter-spacing:0.1em;white-space:nowrap;}
+.p1 .p-name{color:var(--blue-bright);}
+.p2 .p-name{color:var(--enemy-bright);}
+.res-row{display:flex;gap:0.5rem;align-items:center;margin-top:2px;}
+.res{display:flex;align-items:center;gap:3px;font-family:'Share Tech Mono',monospace;font-size:0.68rem;background:rgba(0,0,0,0.35);padding:1px 5px;border:1px solid rgba(120,140,60,0.2);border-radius:1px;}
+.res .ico{font-size:0.78rem;}
+.res .val{color:var(--amber-bright);font-weight:bold;}
+.res .rl{color:var(--text-dim);font-size:0.52rem;}
+.m-wrap{margin-top:3px;}
+.m-lrow{display:flex;justify-content:space-between;margin-bottom:2px;}
+.m-lbl{font-family:'Share Tech Mono',monospace;font-size:0.5rem;letter-spacing:0.1em;color:var(--text-dim);}
+.m-val{font-family:'Share Tech Mono',monospace;font-size:0.52rem;color:var(--text-label);}
+.m-bar{width:105px;height:5px;background:rgba(0,0,0,0.5);border:1px solid rgba(80,90,40,0.4);border-radius:1px;overflow:hidden;}
+.m-fill{height:100%;transition:width 0.5s,filter 0.5s;border-radius:1px;}
+.p1 .m-fill{background:linear-gradient(90deg,var(--blue-ally),var(--blue-bright));}
+.p2 .m-fill{background:linear-gradient(90deg,#8b0000,var(--enemy-bright));}
+.hud-center{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:0.3rem;background:rgba(8,10,4,0.7);}
+.hc-top{display:flex;align-items:center;gap:0.8rem;}
+.t-block{display:flex;flex-direction:column;align-items:center;}
+.tl-lbl{font-family:'Share Tech Mono',monospace;font-size:0.48rem;letter-spacing:0.3em;color:var(--text-dim);}
+.tl-num{font-family:'Black Ops One',cursive;font-size:1.6rem;color:var(--amber-bright);text-shadow:0 0 20px rgba(212,144,10,0.4),0 2px 0 rgba(0,0,0,0.8);line-height:1;}
+.div-v{width:1px;height:32px;background:var(--panel-border);}
+.ph-block{text-align:center;}
+.ph-lbl{font-family:'Share Tech Mono',monospace;font-size:0.44rem;letter-spacing:0.2em;color:var(--text-dim);}
+.ph-val{font-family:'Black Ops One',cursive;font-size:0.7rem;letter-spacing:0.1em;color:var(--olive-bright);background:rgba(100,120,40,0.15);border:1px solid rgba(120,140,60,0.3);padding:0.15rem 0.5rem;display:block;margin-top:1px;}
+.hud-nav{display:flex;gap:4px;margin-top:4px;}
+.hbtn{font-family:'Black Ops One',cursive;font-size:0.5rem;letter-spacing:0.08em;padding:3px 8px;border:1px solid var(--panel-border);background:rgba(30,38,16,0.8);color:var(--text-label);cursor:pointer;transition:all 0.2s;}
+.hbtn:hover{border-color:var(--olive);color:var(--text-bright);}
+
+/* ══ MAIN AREA ══ */
+#main-area{flex:1;display:flex;overflow:hidden;background:var(--camo-dark);}
+
+/* ── LEFT PANEL ── */
+#left-panel{width:210px;flex-shrink:0;background:var(--panel-bg);border-right:2px solid var(--panel-border);display:flex;flex-direction:column;overflow:hidden;position:relative;}
+#left-panel::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:linear-gradient(180deg,var(--blue-ally),var(--blue-bright),var(--blue-ally));opacity:0.7;}
+.phdr{font-family:'Black Ops One',cursive;font-size:0.6rem;letter-spacing:0.18em;color:var(--amber-bright);padding:0.48rem 0.6rem 0.48rem 0.85rem;background:linear-gradient(90deg,rgba(40,50,20,0.9) 0%,rgba(25,30,12,0.9) 100%);border-bottom:1px solid var(--panel-border);display:flex;align-items:center;justify-content:space-between;text-transform:uppercase;flex-shrink:0;}
+.phdr::after{content:'◆';font-size:0.5rem;color:var(--olive);}
+.unit-roster{flex:1;overflow-y:auto;padding:0.45rem;}
+.unit-roster::-webkit-scrollbar{width:3px;}
+.unit-roster::-webkit-scrollbar-thumb{background:var(--olive);border-radius:2px;}
+.deploy-unit{padding:0.5rem 0.6rem;border:1px solid var(--panel-border);border-left:3px solid transparent;background:linear-gradient(135deg,rgba(35,42,20,0.7) 0%,rgba(20,25,12,0.7) 100%);margin-bottom:0.38rem;cursor:pointer;transition:all 0.2s;clip-path:polygon(0 0,calc(100% - 6px) 0,100% 6px,100% 100%,0 100%);}
+.deploy-unit:hover:not(.disabled){border-color:var(--olive);border-left-color:var(--olive-bright);background:linear-gradient(135deg,rgba(58,74,34,0.45) 0%,rgba(35,42,20,0.45) 100%);transform:translateX(3px);}
+.deploy-unit.selected{border-color:var(--olive-bright);border-left-color:var(--amber-bright);background:linear-gradient(135deg,rgba(80,100,40,0.28) 0%,rgba(45,55,22,0.28) 100%);box-shadow:inset 0 0 14px rgba(168,188,80,0.1);}
+.deploy-unit.disabled{opacity:0.32;cursor:not-allowed;}
+.u-hdr{display:flex;align-items:center;gap:0.45rem;margin-bottom:0.18rem;}
+.u-ico{font-size:1.25rem;line-height:1;filter:drop-shadow(0 1px 3px rgba(0,0,0,0.8));}
+.u-lbl{font-family:'Black Ops One',cursive;font-size:0.6rem;letter-spacing:0.1em;color:var(--text-bright);flex:1;}
+.u-cost{font-family:'Share Tech Mono',monospace;font-size:0.63rem;color:var(--amber-bright);background:rgba(80,60,10,0.4);border:1px solid rgba(200,150,20,0.3);padding:1px 5px;border-radius:1px;}
+.u-stats{display:flex;gap:0.25rem;flex-wrap:wrap;}
+.sc{font-family:'Share Tech Mono',monospace;font-size:0.5rem;color:var(--text-dim);background:rgba(0,0,0,0.3);padding:1px 4px;border-radius:1px;}
+.sc b{color:var(--text-label);}
+.phase-actions{padding:0.45rem;border-top:1px solid var(--panel-border);display:flex;flex-direction:column;gap:0.28rem;flex-shrink:0;}
+.action-btn{font-family:'Black Ops One',cursive;font-size:0.58rem;letter-spacing:0.1em;padding:0.48rem 0.6rem;border:1px solid var(--panel-border);border-left:3px solid transparent;background:linear-gradient(90deg,rgba(35,42,20,0.8) 0%,rgba(20,25,12,0.8) 100%);color:var(--text-label);cursor:pointer;transition:all 0.2s;text-align:left;display:flex;align-items:center;gap:0.35rem;text-transform:uppercase;}
+.action-btn:hover{border-color:var(--olive);border-left-color:var(--olive-bright);color:var(--text-bright);background:linear-gradient(90deg,rgba(58,74,34,0.4) 0%,rgba(35,42,20,0.4) 100%);}
+.action-btn.active{border-color:var(--olive-bright);border-left-color:var(--amber-bright);color:var(--amber-bright);background:linear-gradient(90deg,rgba(80,100,40,0.25) 0%,rgba(50,65,25,0.25) 100%);}
+.action-btn.end-turn{border-left-color:var(--red-danger);color:var(--red-alert);border-color:var(--red-danger);margin-top:0.15rem;}
+.action-btn.end-turn:hover{background:linear-gradient(90deg,rgba(80,20,20,0.35) 0%,rgba(50,15,15,0.35) 100%);color:#ff6666;border-color:var(--red-alert);}
+
+/* ══ GRID AREA ══ */
+#grid-area{flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;background:radial-gradient(ellipse at 50% 50%,rgba(35,42,20,0.25) 0%,rgba(10,12,5,0.9) 100%);}
+#grid-wrap{overflow:auto;max-width:100%;max-height:100%;}
+#grid-wrap::-webkit-scrollbar{width:6px;height:6px;}
+#grid-wrap::-webkit-scrollbar-track{background:rgba(12,15,6,0.8);}
+#grid-wrap::-webkit-scrollbar-thumb{background:var(--olive);border-radius:3px;}
+#grid{display:grid;gap:2px;background:rgba(5,7,2,0.9);border:2px solid var(--panel-border);box-shadow:0 0 50px rgba(0,0,0,0.9),inset 0 0 20px rgba(0,0,0,0.5);}
+
+/* ── CELLS ── */
+.cell{width:var(--cell-size);height:var(--cell-size);position:relative;cursor:pointer;display:flex;align-items:center;justify-content:center;overflow:hidden;transition:box-shadow 0.12s;border:1px solid rgba(60,72,30,0.35);}
+.cell.terrain-plain{background:radial-gradient(ellipse 60% 60% at 30% 40%,rgba(50,65,28,0.55) 0%,transparent 70%),linear-gradient(135deg,#2a3318 0%,#3a4820 50%,#2d3a1a 100%);}
+.cell.terrain-forest{background:radial-gradient(ellipse 80% 70% at 60% 50%,rgba(25,50,18,0.8) 0%,transparent 70%),linear-gradient(135deg,#182810 0%,#223218 50%,#1c2e12 100%);}
+.cell.terrain-mountain{background:linear-gradient(155deg,#3a3228 0%,#2a2520 40%,#1e1c18 100%);}
+.cell.terrain-water{background:linear-gradient(160deg,#0a1820 0%,#0d2030 50%,#0a1825 100%);border-color:rgba(20,60,100,0.35) !important;}
+.cell.terrain-base-p1{background:radial-gradient(ellipse at 50% 50%,rgba(28,68,48,0.45) 0%,transparent 70%),linear-gradient(135deg,#182c1e 0%,#203828 100%);border-color:rgba(45,130,80,0.3) !important;}
+.cell.terrain-base-p2{background:radial-gradient(ellipse at 50% 50%,rgba(68,22,18,0.45) 0%,transparent 70%),linear-gradient(135deg,#28160e 0%,#341c12 100%);border-color:rgba(130,45,40,0.3) !important;}
+.cell.terrain-objective{background:radial-gradient(ellipse at 50% 50%,rgba(75,62,12,0.5) 0%,transparent 70%),linear-gradient(135deg,#282210 0%,#352c14 100%);}
+.cell:hover:not(.fog):not(.terrain-water){border-color:rgba(168,188,80,0.55) !important;z-index:2;}
+.tdeco{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:1.35rem;opacity:0.38;pointer-events:none;z-index:0;}
+.cell.terrain-mountain .tdeco{font-size:1.55rem;opacity:0.44;}
+.cell.terrain-water .tdeco{font-size:1.45rem;opacity:0.28;animation:wanim 3s ease-in-out infinite;}
+@keyframes wanim{0%,100%{opacity:0.22;}50%{opacity:0.38;}}
+.cell.terrain-objective .tdeco{animation:opulse 2s ease-in-out infinite;}
+@keyframes opulse{0%,100%{opacity:0.38;transform:scale(1);}50%{opacity:0.65;transform:scale(1.12);}}
+.coord{position:absolute;top:2px;left:3px;font-family:'Share Tech Mono',monospace;font-size:0.4rem;color:rgba(120,140,60,0.28);pointer-events:none;z-index:0;line-height:1;}
+
+/* States */
+.cell.moveable{background:radial-gradient(ellipse at 50% 50%,rgba(50,180,100,0.22) 0%,transparent 70%) !important;border-color:rgba(80,200,130,0.7) !important;animation:mpulse 1.4s ease-in-out infinite;}
+@keyframes mpulse{0%,100%{box-shadow:inset 0 0 8px rgba(50,180,100,0.18),0 0 6px rgba(50,180,100,0.12);}50%{box-shadow:inset 0 0 18px rgba(50,180,100,0.38),0 0 12px rgba(50,180,100,0.28);}}
+.cell.attackable{background:radial-gradient(ellipse at 50% 50%,rgba(200,30,30,0.22) 0%,transparent 70%) !important;border-color:rgba(220,50,50,0.8) !important;animation:apulse 0.9s ease-in-out infinite;}
+@keyframes apulse{0%,100%{box-shadow:inset 0 0 8px rgba(200,30,30,0.22),0 0 5px rgba(200,30,30,0.18);}50%{box-shadow:inset 0 0 18px rgba(220,50,50,0.48),0 0 13px rgba(220,50,50,0.3);}}
+.cell.selected-cell{border-color:var(--amber-bright) !important;box-shadow:inset 0 0 16px rgba(212,144,10,0.35),0 0 10px rgba(212,144,10,0.22) !important;z-index:3;}
+.cell.fog{background:var(--fog-color) !important;border-color:rgba(35,40,18,0.2) !important;cursor:not-allowed;}
+.cell.fog .tdeco,.cell.fog .coord{display:none;}
+.cell.fog::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 30% 40%,rgba(18,22,8,0.25) 0%,transparent 60%),var(--fog-color);z-index:10;}
+.cell.fog .uoc{display:none !important;}
+
+/* ── UNIT ON CELL ── */
+.uoc{position:relative;z-index:5;width:calc(var(--cell-size) - 4px);height:calc(var(--cell-size) - 4px);display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:2px;transition:transform 0.1s;}
+.uoc:hover{transform:scale(1.05);}
+.p1 .uoc{background:radial-gradient(ellipse at 50% 40%,rgba(28,78,52,0.72) 0%,rgba(12,38,26,0.88) 100%);border:2px solid rgba(50,180,100,0.6);box-shadow:0 2px 8px rgba(0,0,0,0.65),0 0 10px rgba(50,180,100,0.2);}
+.p2 .uoc{background:radial-gradient(ellipse at 50% 40%,rgba(78,22,22,0.72) 0%,rgba(38,10,10,0.88) 100%);border:2px solid rgba(180,50,50,0.6);box-shadow:0 2px 8px rgba(0,0,0,0.65),0 0 10px rgba(180,50,50,0.2);}
+.u-em{font-size:1.55rem;line-height:1;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.9));margin-bottom:1px;}
+.ap-row{display:flex;gap:2px;margin-bottom:2px;}
+.ap-pip{width:7px;height:4px;border-radius:1px;transition:all 0.2s;}
+.p1 .ap-pip{background:var(--blue-bright);}
+.p2 .ap-pip{background:var(--enemy-bright);}
+.ap-pip.used{background:rgba(80,80,80,0.4) !important;}
+.u-hpbar{position:absolute;bottom:3px;left:4px;right:4px;height:4px;background:rgba(0,0,0,0.6);border-radius:1px;overflow:hidden;border:1px solid rgba(0,0,0,0.3);}
+.u-hpfill{height:100%;border-radius:1px;transition:width 0.3s;}
+.p1 .u-hpfill{background:linear-gradient(90deg,var(--blue-ally),var(--blue-bright));}
+.p2 .u-hpfill{background:linear-gradient(90deg,#7b0000,var(--enemy-bright));}
+.u-status{position:absolute;top:2px;right:2px;font-size:0.6rem;line-height:1;}
+.u-ptag{position:absolute;top:2px;left:3px;font-family:'Share Tech Mono',monospace;font-size:0.42rem;font-weight:bold;padding:0 2px;border-radius:1px;line-height:1.3;}
+.p1 .u-ptag{background:rgba(28,78,52,0.85);color:var(--blue-bright);}
+.p2 .u-ptag{background:rgba(78,22,22,0.85);color:var(--enemy-bright);}
+
+/* ══ RIGHT PANEL ══ */
+#right-panel{width:215px;flex-shrink:0;background:var(--panel-bg);border-left:2px solid var(--panel-border);display:flex;flex-direction:column;overflow:hidden;position:relative;}
+#right-panel::before{content:'';position:absolute;top:0;right:0;width:3px;height:100%;background:linear-gradient(180deg,var(--enemy-red),var(--enemy-bright),var(--enemy-red));opacity:0.55;}
+#unit-detail{padding:0.65rem;border-bottom:1px solid var(--panel-border);flex-shrink:0;}
+.det-empty{color:var(--text-dim);font-size:0.7rem;text-align:center;padding:1.5rem 0;line-height:1.6;font-style:italic;}
+.det-name{font-family:'Black Ops One',cursive;font-size:0.78rem;letter-spacing:0.1em;margin-bottom:0.28rem;}
+.p1 .det-name{color:var(--blue-bright);}
+.p2 .det-name{color:var(--enemy-bright);}
+.det-hpbar{height:7px;background:rgba(0,0,0,0.5);border:1px solid rgba(80,90,40,0.3);border-radius:1px;overflow:hidden;margin-bottom:0.45rem;}
+.det-hpfill{height:100%;border-radius:1px;transition:width 0.4s;}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.22rem;margin-bottom:0.45rem;}
+.sbox{background:rgba(0,0,0,0.3);border:1px solid rgba(60,70,30,0.4);padding:0.22rem 0.38rem;border-radius:1px;}
+.sbox .sl{font-family:'Share Tech Mono',monospace;font-size:0.46rem;color:var(--text-dim);letter-spacing:0.04em;}
+.sbox .sv{font-family:'Black Ops One',cursive;font-size:0.72rem;color:var(--text-bright);}
+.ab-list{display:flex;flex-wrap:wrap;gap:3px;}
+.ab-chip{font-family:'Share Tech Mono',monospace;font-size:0.52rem;padding:2px 5px;border-radius:1px;border:1px solid rgba(100,120,40,0.4);background:rgba(40,50,20,0.5);color:var(--olive-bright);}
+.terr-info{margin-top:0.38rem;padding-top:0.38rem;border-top:1px solid rgba(60,70,30,0.3);}
+.ti-lbl{font-family:'Share Tech Mono',monospace;font-size:0.5rem;color:var(--text-dim);letter-spacing:0.07em;margin-bottom:2px;}
+.ti-val{font-family:'Black Ops One',cursive;font-size:0.62rem;color:var(--text-label);}
+#mission-panel{flex:1;overflow-y:auto;}
+#mission-panel::-webkit-scrollbar{width:3px;}
+#mission-panel::-webkit-scrollbar-thumb{background:var(--olive);}
+.mission-item{padding:0.5rem 0.65rem;border-bottom:1px solid rgba(40,48,20,0.55);position:relative;overflow:hidden;}
+.mission-item::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--amber-bright);opacity:0.5;}
+.mission-item.done::before{background:var(--blue-bright);opacity:0.8;}
+.m-title{font-family:'Black Ops One',cursive;font-size:0.6rem;letter-spacing:0.08em;color:var(--amber-bright);margin-bottom:0.18rem;}
+.mission-item.done .m-title{color:var(--blue-bright);}
+.mission-item.done .m-title::after{content:' ✓';}
+.m-desc{font-size:0.65rem;color:var(--text-dim);line-height:1.4;font-weight:300;margin-bottom:0.18rem;}
+.m-rew{font-family:'Share Tech Mono',monospace;font-size:0.55rem;color:var(--olive-bright);}
+
+/* ══ LOG ══ */
+#log-panel{height:98px;flex-shrink:0;background:rgba(7,9,3,0.98);border-top:2px solid var(--panel-border);display:flex;flex-direction:column;overflow:hidden;}
+.log-hdr{font-family:'Black Ops One',cursive;font-size:0.5rem;letter-spacing:0.2em;color:var(--olive);padding:0.22rem 0.7rem;border-bottom:1px solid rgba(60,70,30,0.4);background:rgba(12,15,6,0.9);display:flex;align-items:center;gap:0.4rem;flex-shrink:0;}
+.log-hdr::before{content:'●';color:var(--red-alert);font-size:0.48rem;animation:blink 1.5s ease-in-out infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0.15;}}
+#log-scroll{flex:1;overflow-y:auto;padding:0.35rem 0.7rem;}
+#log-scroll::-webkit-scrollbar{width:3px;}
+#log-scroll::-webkit-scrollbar-thumb{background:var(--panel-border);}
+.log-entry{font-family:'Share Tech Mono',monospace;font-size:0.62rem;line-height:1.65;border-left:2px solid transparent;padding-left:0.45rem;margin-bottom:0.03rem;}
+.log-entry.combat{border-color:var(--red-danger);color:#c05050;}
+.log-entry.move{border-color:var(--camo-4);color:var(--text-dim);}
+.log-entry.event{border-color:var(--amber);color:var(--amber-bright);}
+.log-entry.info{border-color:var(--camo-3);color:var(--text-dim);}
+.log-entry.victory{border-color:var(--blue-bright);color:var(--blue-bright);font-weight:bold;}
+
+/* ══ TURN OVERLAY ══ */
+#turn-overlay{position:fixed;inset:0;background:rgba(4,6,2,0.94);display:none;align-items:center;justify-content:center;z-index:300;flex-direction:column;gap:0.75rem;}
+#turn-overlay.show{display:flex;}
+.tovl-emb{font-size:3.5rem;margin-bottom:0.4rem;animation:pop 0.4s cubic-bezier(0.34,1.56,0.64,1);}
+@keyframes pop{from{transform:scale(0.4);opacity:0;}to{transform:scale(1);opacity:1;}}
+.tovl-title{font-family:'Black Ops One',cursive;font-size:clamp(1.8rem,5vw,3rem);letter-spacing:0.2em;animation:fadein 0.5s ease;text-shadow:0 2px 0 rgba(0,0,0,0.8);}
+@keyframes fadein{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+.tovl-sub{font-family:'Share Tech Mono',monospace;font-size:0.78rem;color:var(--text-dim);letter-spacing:0.3em;}
+.tovl-bar{width:200px;height:3px;background:rgba(80,90,40,0.3);border-radius:2px;overflow:hidden;margin-top:0.45rem;}
+.tovl-prog{height:100%;width:0%;background:linear-gradient(90deg,var(--olive),var(--amber-bright));animation:pfill 1.7s linear forwards;}
+@keyframes pfill{from{width:0%;}to{width:100%;}}
+
+/* ══ MODAL ══ */
+#modal{position:fixed;inset:0;background:rgba(0,0,0,0.9);display:none;align-items:center;justify-content:center;z-index:400;}
+#modal.show{display:flex;}
+.mbox{background:linear-gradient(160deg,rgba(22,28,12,0.99) 0%,rgba(13,16,6,0.99) 100%);border:2px solid var(--olive);border-bottom:4px solid var(--camo-shadow);padding:2.2rem 1.8rem;max-width:430px;width:90%;text-align:center;box-shadow:0 0 60px rgba(120,140,60,0.25),0 20px 60px rgba(0,0,0,0.9);clip-path:polygon(0 0,calc(100% - 22px) 0,100% 22px,100% 100%,22px 100%,0 calc(100% - 22px));position:relative;}
+.mbox::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--olive),var(--amber-bright),var(--olive));}
+.m-emb{font-size:3.3rem;margin-bottom:0.9rem;display:block;}
+.m-title{font-family:'Black Ops One',cursive;font-size:1.7rem;letter-spacing:0.15em;margin-bottom:0.45rem;color:var(--amber-bright);text-shadow:0 2px 0 rgba(0,0,0,0.8);}
+.m-body{font-size:0.83rem;color:var(--text-dim);line-height:1.8;margin-bottom:1.6rem;font-weight:300;}
+.m-btns{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;}
+
+/* ══ TOAST ══ */
+#toast{position:fixed;top:82px;left:50%;transform:translateX(-50%);background:linear-gradient(90deg,rgba(22,28,12,0.98),rgba(38,48,18,0.98));border:1px solid var(--olive);border-bottom:2px solid var(--camo-shadow);color:var(--text-bright);font-family:'Black Ops One',cursive;font-size:0.7rem;letter-spacing:0.2em;padding:0.52rem 1.4rem;z-index:500;opacity:0;transition:opacity 0.25s;pointer-events:none;white-space:nowrap;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px));box-shadow:0 4px 20px rgba(0,0,0,0.6);}
+#toast.show{opacity:1;}
+
+/* ══ HELP ══ */
+#help-screen{position:absolute;inset:0;background:rgba(4,6,2,0.97);display:none;z-index:150;overflow-y:auto;padding:1.8rem;}
+.help-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.4rem;}
+.help-title{font-family:'Black Ops One',cursive;font-size:1.3rem;letter-spacing:0.15em;color:var(--amber-bright);}
+.help-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(245px,1fr));gap:0.9rem;}
+.hcard{border:1px solid var(--panel-border);border-left:3px solid var(--olive);background:linear-gradient(135deg,rgba(22,28,12,0.96) 0%,rgba(13,16,6,0.96) 100%);padding:0.9rem;}
+.hcard h3{font-family:'Black Ops One',cursive;font-size:0.68rem;letter-spacing:0.12em;color:var(--amber-bright);margin-bottom:0.55rem;}
+.hcard p,.hcard li{font-size:0.71rem;color:var(--text-dim);line-height:1.7;font-weight:300;}
+.hcard ul{padding-left:1rem;}
+.hcard li{margin-bottom:0.12rem;}
+.hcard b{color:var(--text-label);}
+</style>
+</head>
+<body>
+
+<!-- PORTRAIT LOCK -->
+<div id="portrait-lock">
+  <span class="ri">📱</span>
+  <h2>ROTATE DEVICE</h2>
+  <p>COMMAND GRID requires landscape orientation.<br>Rotate your device to continue the mission.</p>
+</div>
+
+<div id="screen">
+
+<!-- ══ TITLE ══ -->
+<div id="title-screen">
+  <div class="camo-bg"><div class="cb"></div><div class="cb"></div><div class="cb"></div><div class="cb"></div><div class="cb"></div></div>
+  <div class="tgrid"></div>
+  <div class="cdeco tl"></div><div class="cdeco tr"></div><div class="cdeco bl"></div><div class="cdeco br"></div>
+  <div class="tc">
+    <div class="t-emblem">🎖</div>
+    <div class="t-logo">COMMAND<br><span>GRID</span></div>
+    <div class="t-sub">TACTICAL WARFARE SYSTEM · CLASSIFIED</div>
+    <div class="t-tag">Lead your forces through the fog of war.<br>Every resource. Every decision. Every sacrifice — counts.</div>
+    <div class="menu-btns">
+      <button class="btn" onclick="showModeSelect()">⚔ DEPLOY TO FIELD</button>
+      <button class="btn btn-ally" onclick="startGame('classic',false)">⚡ QUICK ENGAGEMENT</button>
+      <button class="btn btn-danger" onclick="showHelp()">📋 FIELD MANUAL</button>
+    </div>
+  </div>
+  <div class="t-version">CMD-GRID v2.4 · BUILD 2024</div>
+  <div class="t-class">⚠ TOP SECRET — AUTHORIZED PERSONNEL ONLY ⚠</div>
+</div>
+
+<!-- ══ MODE SCREEN ══ -->
+<div id="mode-screen">
+  <div class="camo-bg"><div class="cb"></div><div class="cb"></div><div class="cb"></div></div>
+  <div class="tgrid"></div>
+  <div class="cdeco tl"></div><div class="cdeco tr"></div><div class="cdeco bl"></div><div class="cdeco br"></div>
+  <div class="inner">
+    <div class="t-logo" style="font-size:2rem;margin-bottom:0.3rem">SELECT OPERATION</div>
+    <div class="t-sub">CHOOSE YOUR MISSION PARAMETERS</div>
+    <div class="mode-cards">
+      <div class="mode-card" onclick="startGame('classic',false)">
+        <span class="ico">⚔️</span><h3>OPERATION ALPHA</h3>
+        <p>2-player classic battle. Eliminate the enemy Command HQ to achieve victory.</p>
+        <div class="diff">STANDARD · 2 PLAYERS</div>
+      </div>
+      <div class="mode-card" onclick="startGame('domination',false)">
+        <span class="ico">🏴</span><h3>OPERATION DOMINATOR</h3>
+        <p>Control 3 objective points simultaneously for 3 consecutive turns.</p>
+        <div class="diff">TACTICAL · 2 PLAYERS</div>
+      </div>
+      <div class="mode-card" onclick="startGame('classic',true)">
+        <span class="ico">🤖</span><h3>TRAINING SIM</h3>
+        <p>Single player engagement against adaptive AI commander.</p>
+        <div class="diff">ADAPTIVE · VS AI</div>
+      </div>
+      <div class="mode-card" onclick="showTitle()">
+        <span class="ico">↩️</span><h3>STAND DOWN</h3>
+        <p>Return to main command center.</p>
+        <div class="diff">RETURN TO TITLE</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ GAME SCREEN ══ -->
+<div id="game-screen">
+  <div id="top-hud">
+    <div class="hud-player p1" id="hud-p1">
+      <div class="p-badge">🟢</div>
+      <div class="p-info">
+        <div class="p-rank">◈ COL. ALPHA COMMAND</div>
+        <div class="p-name">ALPHA FORCE</div>
+        <div class="res-row">
+          <div class="res"><span class="ico">⚡</span><span class="val" id="p1-cmd">5</span><span class="rl">CMD</span></div>
+          <div class="res"><span class="ico">🎒</span><span class="val" id="p1-supply">10</span><span class="rl">SUP</span></div>
+        </div>
+        <div class="m-wrap">
+          <div class="m-lrow"><span class="m-lbl">UNIT MORALE</span><span class="m-val" id="p1-morale-val">100%</span></div>
+          <div class="m-bar"><div class="m-fill" id="p1-morale-bar" style="width:100%"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hud-center">
+      <div class="hc-top">
+        <div class="t-block"><span class="tl-lbl">TURN</span><span class="tl-num" id="turn-num">1</span></div>
+        <div class="div-v"></div>
+        <div class="ph-block"><span class="ph-lbl">PHASE</span><span class="ph-val" id="phase-label">DEPLOY</span></div>
+      </div>
+      <div class="hud-nav">
+        <button class="hbtn" onclick="showHelp()">📋 MANUAL</button>
+        <button class="hbtn" onclick="showTitle()">⬅ RETREAT</button>
+      </div>
+    </div>
+
+    <div class="hud-player p2" id="hud-p2">
+      <div class="p-badge">🔴</div>
+      <div class="p-info">
+        <div class="p-rank">◈ COL. BRAVO COMMAND</div>
+        <div class="p-name">BRAVO FORCE</div>
+        <div class="res-row">
+          <div class="res"><span class="ico">⚡</span><span class="val" id="p2-cmd">5</span><span class="rl">CMD</span></div>
+          <div class="res"><span class="ico">🎒</span><span class="val" id="p2-supply">10</span><span class="rl">SUP</span></div>
+        </div>
+        <div class="m-wrap">
+          <div class="m-lrow"><span class="m-lbl">UNIT MORALE</span><span class="m-val" id="p2-morale-val">100%</span></div>
+          <div class="m-bar"><div class="m-fill" id="p2-morale-bar" style="width:100%"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="main-area">
+    <div id="left-panel">
+      <div class="phdr" id="left-panel-title">DEPLOY UNITS</div>
+      <div class="unit-roster" id="unit-roster"></div>
+      <div class="phase-actions" id="phase-actions" style="display:none">
+        <button class="action-btn" id="btn-move" onclick="setMode('move')">🚶 MOVE UNIT</button>
+        <button class="action-btn" id="btn-attack" onclick="setMode('attack')">🎯 FIRE ORDER</button>
+        <button class="action-btn" id="btn-ability" onclick="setMode('ability')">⚡ SPECIAL OPS</button>
+        <button class="action-btn end-turn" onclick="endTurn()">⏭ END TURN</button>
+      </div>
+    </div>
+
+    <div id="grid-area">
+      <div id="grid-wrap"><div id="grid"></div></div>
+    </div>
+
+    <div id="right-panel">
+      <div class="phdr">UNIT INTEL</div>
+      <div id="unit-detail"><div class="det-empty">Select a unit to view<br>combat profile &amp; orders.</div></div>
+      <div class="phdr">ACTIVE MISSIONS</div>
+      <div id="mission-panel"></div>
+    </div>
+  </div>
+
+  <div id="log-panel">
+    <div class="log-hdr">SITREP — COMMAND LOG</div>
+    <div id="log-scroll"></div>
+  </div>
+</div>
+
+<!-- HELP -->
+<div id="help-screen">
+  <div class="help-top">
+    <div class="help-title">🎖 FIELD MANUAL — COMMAND GRID</div>
+    <button class="btn" onclick="hideHelp()" style="min-width:120px;padding:0.5rem 1rem">✕ CLOSE</button>
+  </div>
+  <div class="help-grid">
+    <div class="hcard"><h3>🎯 MISSION OBJECTIVE</h3><p>Destroy the enemy HQ unit or complete mission objectives. Manage command points, supply, and unit morale carefully — a demoralized army fights at reduced effectiveness.</p></div>
+    <div class="hcard"><h3>🔄 TURN STRUCTURE</h3><ul><li><b>Deploy Phase</b> — Spend Supply to place units in your base zone</li><li><b>Battle Phase</b> — Move and attack with units (2 AP each)</li><li>Press <b>COMMENCE BATTLE</b> to end deploy, <b>END TURN</b> to pass</li></ul></div>
+    <div class="hcard"><h3>⚡ RESOURCES</h3><ul><li><b>Supply 🎒</b> — Spent deploying. Gain +3 each round</li><li><b>Command ⚡</b> — Powers abilities. Gain +2 each round (max 10)</li><li><b>Morale 🛡</b> — -10% per unit lost. Low morale = less attack</li><li><b>Objectives ⭐</b> — Yields +1 Supply/turn when controlled</li></ul></div>
+    <div class="hcard"><h3>🗺 TERRAIN</h3><ul><li>🌲 <b>Forest</b> — +1 defense, partial cover</li><li>⛰ <b>Mountain</b> — +2 defense, blocks ground movement</li><li>🌊 <b>Water</b> — Impassable (Drone flies over)</li><li>⭐ <b>Objective</b> — Capture by moving onto it</li><li>🔷/🔶 <b>Base</b> — Your deployment zone</li></ul></div>
+    <div class="hcard"><h3>🪖 UNIT ROSTER</h3><ul><li>🪖 <b>Infantry (3)</b> — Balanced frontliner</li><li>🎯 <b>Sniper (5)</b> — Range 4, high damage, fragile</li><li>🔭 <b>Recon (4)</b> — Fast, wide vision</li><li>🚁 <b>Drone (6)</b> — Flies over water, area damage</li><li>🛡 <b>Tank (8)</b> — Maximum armor + siege</li><li>💊 <b>Medic (4)</b> — Heals adjacent allies</li><li>🏛 <b>HQ</b> — Protect at all costs!</li></ul></div>
+    <div class="hcard"><h3>👁 FOG OF WAR</h3><p>Only cells within your units' vision range are visible. Enemy units in fog are hidden. Deploy Recon to extend sight lines. Snipers have exceptional vision (5 cells).</p></div>
+    <div class="hcard"><h3>✨ SPECIAL ABILITIES</h3><ul><li><b>Sniper — Overwatch</b>: Intercepts enemy moves in range</li><li><b>Medic — Field Surgery</b>: +30 HP to adjacent ally (2 CMD)</li><li><b>Drone — Airstrike</b>: Damages all adjacent enemies (3 CMD)</li><li><b>Recon — Scout</b>: Reveals large area (1 CMD)</li><li><b>Infantry — Fortify</b>: +5 defense bonus</li><li><b>Tank — Siege Fire</b>: Devastating strike (2 CMD)</li></ul></div>
+    <div class="hcard"><h3>📱 CONTROLS</h3><ul><li>Select unit type → click base cell to deploy</li><li>Battle Phase: click your unit → green = move range</li><li>Switch to FIRE ORDER → red = attack range</li><li>SPECIAL OPS → use abilities on valid targets</li><li>Landscape orientation required on mobile</li></ul></div>
+  </div>
+</div>
+
+</div><!-- #screen -->
+
+<div id="turn-overlay">
+  <div class="tovl-emb" id="tovl-emb">🎖</div>
+  <div class="tovl-title" id="turn-overlay-text">PLAYER 1 TURN</div>
+  <div class="tovl-sub" id="turn-overlay-sub">PREPARE YOUR STRATEGY</div>
+  <div class="tovl-bar"><div class="tovl-prog" id="tovl-prog"></div></div>
+</div>
+
+<div id="modal">
+  <div class="mbox">
+    <span class="m-emb" id="modal-emblem">🏆</span>
+    <div class="m-title" id="modal-title">VICTORY</div>
+    <div class="m-body" id="modal-body"></div>
+    <div class="m-btns">
+      <button class="btn" onclick="startGame(window.GAME_MODE,window.VS_AI)">⚔ REDEPLOY</button>
+      <button class="btn btn-danger" onclick="showTitle()">⬅ HQ</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const COLS=12,ROWS=10;
+window.GAME_MODE='classic';window.VS_AI=false;
+const UNIT_TYPES={
+  infantry:{name:'INFANTRY',emoji:'🪖',hp:80,atk:25,def:10,range:1,move:2,vision:2,cost:3,ap:2,abilities:['fortify'],canFly:false},
+  sniper:  {name:'SNIPER',  emoji:'🎯',hp:40,atk:50,def:5, range:4,move:1,vision:5,cost:5,ap:2,abilities:['overwatch'],canFly:false},
+  recon:   {name:'RECON',   emoji:'🔭',hp:50,atk:20,def:5, range:2,move:3,vision:4,cost:4,ap:2,abilities:['scout_report'],canFly:false},
+  drone:   {name:'DRONE',   emoji:'🚁',hp:35,atk:35,def:3, range:2,move:3,vision:3,cost:6,ap:2,abilities:['airstrike'],canFly:true},
+  tank:    {name:'TANK',    emoji:'🛡',hp:130,atk:45,def:25,range:1,move:1,vision:2,cost:8,ap:2,abilities:['siege'],canFly:false},
+  medic:   {name:'MEDIC',   emoji:'💊',hp:45,atk:15,def:8, range:1,move:2,vision:2,cost:4,ap:2,abilities:['field_surgery'],canFly:false},
+  hq:      {name:'HQ',      emoji:'🏛',hp:200,atk:0,def:30,range:0,move:0,vision:3,cost:0,ap:0,abilities:[],canFly:false},
+};
+const TDEF={plain:{def:0,block:false,water:false},forest:{def:1,block:false,water:false},mountain:{def:2,block:true,water:false},water:{def:0,block:true,water:true},'base-p1':{def:1,block:false,water:false},'base-p2':{def:1,block:false,water:false},objective:{def:0,block:false,water:false}};
+const TDECO={plain:'',forest:'🌲',mountain:'⛰',water:'🌊','base-p1':'🔷','base-p2':'🔶',objective:'⭐'};
+const MAP_LAYOUT=['PPPPFFWWPPPB','PBPPFPWPPPPP','PPPPMMPWPPPP','PPFPPMWWPPFP','PPFPPPPPPPPP','PPPPPPPPPPPP','PPFPPWWPPMPP','PPPPWWPPMMPF','PPPPPPWPPPBP','BPPPFWWPPPPB'];
+let G={};
+
+function buildTerrain(){
+  const t=[];
+  for(let r=0;r<ROWS;r++){t[r]=[];for(let c=0;c<COLS;c++){const ch=MAP_LAYOUT[r]?.[c]||'P';if(c<=1&&r>=3&&r<=6)t[r][c]='base-p1';else if(c>=10&&r>=3&&r<=6)t[r][c]='base-p2';else if(ch==='F')t[r][c]='forest';else if(ch==='M')t[r][c]='mountain';else if(ch==='W')t[r][c]='water';else if(ch==='B')t[r][c]='objective';else t[r][c]='plain';}}
+  return t;
+}
+function initState(mode,vsAI){
+  const terrain=buildTerrain();const units={};let uid=0;
+  function addUnit(type,player,row,col){const def=UNIT_TYPES[type];const id='u'+(uid++);units[id]={id,type,player,row,col,hp:def.hp,maxHp:def.hp,ap:def.ap,status:[],overwatchActive:false};return id;}
+  addUnit('hq',1,4,1);addUnit('hq',2,5,10);
+  G={mode,vsAI,turn:1,currentPlayer:1,phase:'deploy',mode_action:'deploy',selectedUnitType:null,selected:null,units,terrain,players:{1:{supply:10,cmd:5,morale:100},2:{supply:10,cmd:5,morale:100}},missions:generateMissions(),objectives:findObjectives(terrain),objectiveControl:{},log:[],_turnDamage:0,_domCtrl:{1:0,2:0}};
+}
+function findObjectives(terrain){const o=[];for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(terrain[r][c]==='objective')o.push({r,c});return o;}
+function generateMissions(){return[{id:'m1',title:'FIRST BLOOD',desc:'Destroy an enemy unit',reward:'+2 Supply',done:false},{id:'m2',title:'CONTROL POINT',desc:'Occupy an objective hex',reward:'+3 Supply',done:false},{id:'m3',title:'RECON SWEEP',desc:'Deploy a Recon unit',reward:'+2 Command',done:false},{id:'m4',title:'IRON FIST',desc:'Deal 100+ damage in one turn',reward:'+4 Supply',done:false}];}
+
+function buildGrid(){
+  const grid=document.getElementById('grid');
+  grid.style.gridTemplateColumns=`repeat(${COLS},var(--cell-size))`;
+  grid.innerHTML='';
+  for(let r=0;r<ROWS;r++){for(let c=0;c<COLS;c++){
+    const cell=document.createElement('div');
+    const terr=G.terrain[r][c];
+    cell.className=`cell terrain-${terr}`;
+    cell.dataset.r=r;cell.dataset.c=c;
+    const deco=TDECO[terr];
+    if(deco){const d=document.createElement('div');d.className='tdeco';d.textContent=deco;cell.appendChild(d);}
+    const coord=document.createElement('div');coord.className='coord';coord.textContent=`${String.fromCharCode(65+c)}${r+1}`;cell.appendChild(coord);
+    cell.addEventListener('click',()=>onCellClick(r,c));
+    cell.addEventListener('touchend',e=>{e.preventDefault();onCellClick(r,c);},{passive:false});
+    grid.appendChild(cell);
+  }}
+}
+function getCell(r,c){return document.querySelector(`#grid .cell[data-r="${r}"][data-c="${c}"]`);}
+
+function render(){renderGrid();renderHUD();renderLeftPanel();renderUnitDetail();renderMissions();}
+
+function renderGrid(){
+  document.querySelectorAll('#grid .cell').forEach(cell=>{cell.classList.remove('moveable','attackable','selected-cell','fog');cell.querySelectorAll('.uoc,.p1,.p2').forEach(el=>el.remove());});
+  const visible=computeVisible(G.currentPlayer);
+  Object.values(G.units).forEach(u=>{
+    const cell=getCell(u.row,u.col);if(!cell)return;
+    if(!visible.has(`${u.row},${u.col}`)&&u.player!==G.currentPlayer)return;
+    const def=UNIT_TYPES[u.type];
+    const wrap=document.createElement('div');wrap.className=`p${u.player}`;
+    const uo=document.createElement('div');uo.className='uoc';
+    const ptag=document.createElement('div');ptag.className='u-ptag';ptag.textContent=u.player===1?'A':'B';uo.appendChild(ptag);
+    const statuses=u.status.filter(s=>['overwatch','fortified','stunned'].includes(s));
+    if(statuses.length){const st=document.createElement('div');st.className='u-status';st.textContent=statuses.includes('overwatch')?'👁':statuses.includes('fortified')?'🔒':'💫';uo.appendChild(st);}
+    const em=document.createElement('div');em.className='u-em';em.textContent=def.emoji;uo.appendChild(em);
+    const apr=document.createElement('div');apr.className='ap-row';
+    for(let i=0;i<def.ap;i++){const p=document.createElement('div');p.className=`ap-pip${i>=u.ap?' used':''}`;apr.appendChild(p);}
+    uo.appendChild(apr);
+    const hpb=document.createElement('div');hpb.className='u-hpbar';
+    const hpf=document.createElement('div');hpf.className='u-hpfill';hpf.style.width=`${Math.max(0,(u.hp/u.maxHp)*100).toFixed(0)}%`;hpb.appendChild(hpf);uo.appendChild(hpb);
+    wrap.appendChild(uo);cell.appendChild(wrap);
+  });
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(!visible.has(`${r},${c}`))getCell(r,c)?.classList.add('fog');
+  if(G.selected){
+    const u=G.units[G.selected];
+    if(u){
+      getCell(u.row,u.col)?.classList.add('selected-cell');
+      if(G.mode_action==='move')getReachable(u).forEach(([r,c])=>getCell(r,c)?.classList.add('moveable'));
+      else if(G.mode_action==='attack')getAttackable(u).forEach(([r,c])=>getCell(r,c)?.classList.add('attackable'));
+      else if(G.mode_action==='ability'){getAttackable(u).forEach(([r,c])=>getCell(r,c)?.classList.add('attackable'));getReachable(u).forEach(([r,c])=>getCell(r,c)?.classList.add('moveable'));}
+    }
+  }
+}
+
+function computeVisible(player){
+  const vis=new Set();
+  Object.values(G.units).filter(u=>u.player===player).forEach(u=>{
+    const range=UNIT_TYPES[u.type].vision;
+    for(let r=u.row-range;r<=u.row+range;r++)for(let c=u.col-range;c<=u.col+range;c++)
+      if(r>=0&&r<ROWS&&c>=0&&c<COLS&&Math.abs(r-u.row)+Math.abs(c-u.col)<=range)vis.add(`${r},${c}`);
+  });
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){const t=G.terrain[r][c];if((player===1&&t==='base-p1')||(player===2&&t==='base-p2'))vis.add(`${r},${c}`);}
+  return vis;
+}
+function getReachable(unit){
+  if(unit.ap<=0)return[];
+  const def=UNIT_TYPES[unit.type];
+  const occ=new Set(Object.values(G.units).map(u=>`${u.row},${u.col}`));
+  const res=[];const vis=new Map();const q=[[unit.row,unit.col,0]];vis.set(`${unit.row},${unit.col}`,0);
+  const dirs=[[-1,0],[1,0],[0,-1],[0,1]];
+  while(q.length){
+    const[r,c,d]=q.shift();
+    if(d>0&&!occ.has(`${r},${c}`))res.push([r,c]);
+    if(d<def.move){for(const[dr,dc]of dirs){const nr=r+dr,nc=c+dc;if(nr<0||nr>=ROWS||nc<0||nc>=COLS)continue;const td=TDEF[G.terrain[nr][nc]];if(td.water&&!def.canFly)continue;if(td.block&&!def.canFly)continue;const k=`${nr},${nc}`;if(!vis.has(k)){vis.set(k,d+1);q.push([nr,nc,d+1]);}}}
+  }
+  return res;
+}
+function getAttackable(unit){
+  if(unit.ap<=0)return[];
+  const def=UNIT_TYPES[unit.type];const res=[];
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){const dist=Math.abs(r-unit.row)+Math.abs(c-unit.col);if(dist<=def.range&&dist>0){const tgt=getUnitAt(r,c);if(tgt&&tgt.player!==unit.player)res.push([r,c]);}}
+  return res;
+}
+function getUnitAt(r,c){return Object.values(G.units).find(u=>u.row===r&&u.col===c)||null;}
+
+function renderHUD(){
+  document.getElementById('turn-num').textContent=G.turn;
+  document.getElementById('phase-label').textContent=G.phase==='deploy'?'DEPLOY':'BATTLE';
+  [1,2].forEach(p=>{
+    const pl=G.players[p];
+    document.getElementById(`p${p}-cmd`).textContent=pl.cmd;
+    document.getElementById(`p${p}-supply`).textContent=pl.supply;
+    const m=Math.max(0,pl.morale);
+    document.getElementById(`p${p}-morale-val`).textContent=m+'%';
+    document.getElementById(`p${p}-morale-bar`).style.width=m+'%';
+    document.getElementById(`hud-p${p}`).classList.toggle('active',G.currentPlayer===p);
+  });
+}
+function renderLeftPanel(){
+  const roster=document.getElementById('unit-roster');
+  const actions=document.getElementById('phase-actions');
+  const title=document.getElementById('left-panel-title');
+  if(G.phase==='deploy'){
+    title.textContent='DEPLOY UNITS';roster.style.display='block';actions.style.display='none';roster.innerHTML='';
+    const pl=G.players[G.currentPlayer];
+    Object.entries(UNIT_TYPES).forEach(([key,def])=>{
+      if(key==='hq')return;
+      const canAfford=pl.supply>=def.cost;
+      const div=document.createElement('div');
+      div.className=`deploy-unit${G.selectedUnitType===key?' selected':''}${!canAfford?' disabled':''}`;
+      div.innerHTML=`<div class="u-hdr"><span class="u-ico">${def.emoji}</span><span class="u-lbl">${def.name}</span><span class="u-cost">🎒${def.cost}</span></div><div class="u-stats"><span class="sc">HP:<b>${def.hp}</b></span><span class="sc">ATK:<b>${def.atk}</b></span><span class="sc">RNG:<b>${def.range}</b></span><span class="sc">MOV:<b>${def.move}</b></span></div>`;
+      if(canAfford)div.onclick=()=>selectUnitType(key);
+      roster.appendChild(div);
+    });
+    const sep=document.createElement('div');sep.style.cssText='padding:0.45rem;';
+    sep.innerHTML=`<button class="action-btn end-turn" onclick="endDeployPhase()" style="width:100%;justify-content:center;letter-spacing:0.15em">⚔ COMMENCE BATTLE</button>`;
+    roster.appendChild(sep);
+  }else{
+    title.textContent='BATTLE ORDERS';roster.style.display='none';actions.style.display='flex';
+    document.getElementById('btn-move').classList.toggle('active',G.mode_action==='move');
+    document.getElementById('btn-attack').classList.toggle('active',G.mode_action==='attack');
+    document.getElementById('btn-ability').classList.toggle('active',G.mode_action==='ability');
+  }
+}
+function renderUnitDetail(){
+  const panel=document.getElementById('unit-detail');
+  if(!G.selected||!G.units[G.selected]){panel.innerHTML='<div class="det-empty">Select a unit to view<br>combat profile &amp; orders.</div>';return;}
+  const u=G.units[G.selected];const def=UNIT_TYPES[u.type];
+  const moraleMod=G.players[u.player].morale/100;
+  const effAtk=Math.round(def.atk*moraleMod);
+  const terrBonus=TDEF[G.terrain[u.row][u.col]].def;
+  const terrName=G.terrain[u.row][u.col].replace('-',' ').toUpperCase();
+  panel.innerHTML=`<div class="p${u.player}"><div class="det-name">${def.emoji} ${def.name}</div><div class="det-hpbar"><div class="det-hpfill" style="width:${Math.max(0,(u.hp/u.maxHp)*100).toFixed(0)}%;background:${u.player===1?'linear-gradient(90deg,var(--blue-ally),var(--blue-bright))':'linear-gradient(90deg,#7b0000,var(--enemy-bright))'}"></div></div><div class="stat-grid"><div class="sbox"><div class="sl">HIT POINTS</div><div class="sv">${u.hp}/${u.maxHp}</div></div><div class="sbox"><div class="sl">FIREPOWER</div><div class="sv">${effAtk}</div></div><div class="sbox"><div class="sl">ARMOR</div><div class="sv">${def.def}</div></div><div class="sbox"><div class="sl">RANGE</div><div class="sv">${def.range}</div></div><div class="sbox"><div class="sl">ACTION PTS</div><div class="sv">${u.ap}/${def.ap}</div></div><div class="sbox"><div class="sl">MOVEMENT</div><div class="sv">${def.move}</div></div></div><div class="ab-list">${def.abilities.map(a=>`<span class="ab-chip">${a.replace('_',' ').toUpperCase()}</span>`).join('')}</div><div class="terr-info"><div class="ti-lbl">CURRENT TERRAIN</div><div class="ti-val">${TDECO[G.terrain[u.row][u.col]]||''} ${terrName} (+${terrBonus} DEF)</div></div></div>`;
+}
+function renderMissions(){
+  const panel=document.getElementById('mission-panel');panel.innerHTML='';
+  G.missions.forEach(m=>{const div=document.createElement('div');div.className=`mission-item${m.done?' done':''}`;div.innerHTML=`<div class="m-title">${m.title}</div><div class="m-desc">${m.desc}</div><div class="m-rew">▶ ${m.reward}</div>`;panel.appendChild(div);});
+}
+
+function onCellClick(r,c){if(G.phase==='deploy')handleDeployClick(r,c);else handleBattleClick(r,c);}
+function handleDeployClick(r,c){
+  if(!G.selectedUnitType){showToast('SELECT A UNIT TYPE FIRST');return;}
+  const terr=G.terrain[r][c];
+  if(!((G.currentPlayer===1&&terr==='base-p1')||(G.currentPlayer===2&&terr==='base-p2'))){showToast('DEPLOY IN BASE ZONE ONLY');return;}
+  if(getUnitAt(r,c)){showToast('CELL OCCUPIED');return;}
+  const cost=UNIT_TYPES[G.selectedUnitType].cost;const pl=G.players[G.currentPlayer];
+  if(pl.supply<cost){showToast('INSUFFICIENT SUPPLY');return;}
+  pl.supply-=cost;
+  const id='u_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
+  const def=UNIT_TYPES[G.selectedUnitType];
+  G.units[id]={id,type:G.selectedUnitType,player:G.currentPlayer,row:r,col:c,hp:def.hp,maxHp:def.hp,ap:def.ap,status:[],overwatchActive:false};
+  addLog(`P${G.currentPlayer} deployed ${def.name} at ${String.fromCharCode(65+c)}${r+1}`,'move');
+  checkMission('m3',G.selectedUnitType==='recon');render();
+}
+function handleBattleClick(r,c){
+  const cu=getUnitAt(r,c);
+  if(cu&&cu.player===G.currentPlayer){G.selected=cu.id;G.mode_action=cu.ap>0?'move':'none';render();return;}
+  if(!G.selected)return;
+  const su=G.units[G.selected];if(!su)return;
+  if(G.mode_action==='move'){const reach=getReachable(su);if(reach.some(([rr,cc])=>rr===r&&cc===c))doMove(su,r,c);else showToast('UNREACHABLE CELL');}
+  else if(G.mode_action==='attack'){const att=getAttackable(su);if(att.some(([rr,cc])=>rr===r&&cc===c)&&cu)doAttack(su,cu);else showToast('TARGET OUT OF RANGE');}
+  else if(G.mode_action==='ability')doAbility(su,r,c,cu);
+}
+function doMove(unit,r,c){
+  unit.row=r;unit.col=c;unit.ap-=1;
+  addLog(`${UNIT_TYPES[unit.type].name} moved → ${String.fromCharCode(65+c)}${r+1}`,'move');
+  if(G.terrain[r][c]==='objective'){G.objectiveControl[`${r},${c}`]=unit.player;addLog(`P${unit.player} captured objective!`,'event');checkMission('m2',true);}
+  checkOverwatch(unit,r,c);G.mode_action=unit.ap>0?'attack':'none';render();
+}
+function doAttack(attacker,defender){
+  const ad=UNIT_TYPES[attacker.type];const dd=UNIT_TYPES[defender.type];
+  const mm=G.players[attacker.player].morale/100;
+  const terrDef=TDEF[G.terrain[defender.row][defender.col]].def||0;
+  const fortBonus=defender.status.includes('fortified')?5:0;
+  attacker.status=attacker.status.filter(s=>s!=='fortified');
+  const raw=Math.round(ad.atk*mm);const variance=Math.round(Math.random()*10-5);
+  const dmg=Math.max(5,raw-dd.def-terrDef-fortBonus+variance);
+  defender.hp-=dmg;attacker.ap-=1;G._turnDamage=(G._turnDamage||0)+dmg;
+  addLog(`${ad.name}(P${attacker.player}) → ${dd.name}(P${defender.player}): -${dmg}HP`,'combat');
+  if(defender.hp>0&&dd.range>=1){const dist=Math.abs(attacker.row-defender.row)+Math.abs(attacker.col-defender.col);if(dist===1){const cm=G.players[defender.player].morale/100;const cdmg=Math.max(2,Math.round(dd.atk*0.5*cm-ad.def+Math.round(Math.random()*6-3)));attacker.hp-=cdmg;addLog(`↩ Counter: -${cdmg}HP to ${ad.name}`,'combat');}}
+  checkDeaths();checkAllMissions();checkVictory();
+  G.mode_action=attacker.hp>0&&attacker.ap>0?'move':'none';G.selected=attacker.hp>0?attacker.id:null;render();
+}
+function doAbility(unit,r,c,target){
+  const def=UNIT_TYPES[unit.type];const pl=G.players[unit.player];const ab=def.abilities[0];if(!ab){showToast('NO ABILITY');return;}
+  if(ab==='field_surgery'){if(!target||target.player!==unit.player){showToast('SELECT ALLIED UNIT');return;}if(Math.abs(target.row-unit.row)+Math.abs(target.col-unit.col)>1){showToast('MUST BE ADJACENT');return;}if(pl.cmd<2){showToast('NEED 2 COMMAND');return;}pl.cmd-=2;target.hp=Math.min(target.maxHp,target.hp+30);unit.ap-=1;addLog(`MEDIC: +30HP to ${UNIT_TYPES[target.type].name}`,'event');}
+  else if(ab==='airstrike'){if(pl.cmd<3){showToast('NEED 3 COMMAND');return;}pl.cmd-=3;[[-1,-1],[-1,0],[-1,1],[0,-1],[0,0],[0,1],[1,-1],[1,0],[1,1]].forEach(([dr,dc])=>{const tr=r+dr,tc=c+dc;const u=getUnitAt(tr,tc);if(u&&u.player!==unit.player){const d=20+Math.round(Math.random()*15);u.hp-=d;addLog(`DRONE airstrike: -${d}HP`,'combat');}});unit.ap-=2;}
+  else if(ab==='scout_report'){if(pl.cmd<1){showToast('NEED 1 COMMAND');return;}pl.cmd-=1;unit.ap-=1;showToast('AREA REVEALED!');addLog('RECON scouted area','event');}
+  else if(ab==='overwatch'){if(!unit.status.includes('overwatch')){unit.status.push('overwatch');unit.overwatchActive=true;unit.ap=0;addLog('SNIPER entered OVERWATCH','event');}else showToast('ALREADY IN OVERWATCH');}
+  else if(ab==='fortify'){if(!unit.status.includes('fortified')){unit.status.push('fortified');unit.ap=0;addLog(`${UNIT_TYPES[unit.type].name} fortified position`,'event');}else showToast('ALREADY FORTIFIED');}
+  else if(ab==='siege'){if(!target||target.player===unit.player){showToast('SELECT ENEMY TARGET');return;}if(Math.abs(target.row-unit.row)+Math.abs(target.col-unit.col)>UNIT_TYPES[unit.type].range){showToast('OUT OF RANGE');return;}if(pl.cmd<2){showToast('NEED 2 COMMAND');return;}pl.cmd-=2;const d=60+Math.round(Math.random()*20);target.hp-=d;unit.ap-=2;addLog(`TANK SIEGE FIRE: -${d}HP`,'combat');}
+  else{showToast('SELECT VALID TARGET');return;}
+  checkDeaths();checkVictory();render();
+}
+function checkOverwatch(movingUnit,r,c){
+  Object.values(G.units).forEach(u=>{if(u.player!==movingUnit.player&&u.overwatchActive){const dist=Math.abs(u.row-r)+Math.abs(u.col-c);if(dist<=UNIT_TYPES[u.type].range){const dmg=Math.round(UNIT_TYPES[u.type].atk*0.7);movingUnit.hp-=dmg;addLog(`OVERWATCH: -${dmg}HP`,'combat');u.overwatchActive=false;u.status=u.status.filter(s=>s!=='overwatch');}}});
+}
+function checkDeaths(){Object.keys(G.units).forEach(id=>{const u=G.units[id];if(u.hp<=0){addLog(`★ ${UNIT_TYPES[u.type].name}(P${u.player}) DESTROYED!`,'combat');G.players[u.player].morale=Math.max(0,G.players[u.player].morale-10);delete G.units[id];if(G.selected===id)G.selected=null;checkMission('m1',true);}});}
+function checkAllMissions(){checkMission('m4',(G._turnDamage||0)>=100);}
+function checkMission(id,cond){if(!cond)return;const m=G.missions.find(m=>m.id===id);if(m&&!m.done){m.done=true;addLog(`◆ MISSION: ${m.title} → ${m.reward}`,'event');const pl=G.players[G.currentPlayer];const num=parseInt((m.reward.match(/\d+/)||[0])[0]);if(m.reward.includes('Supply'))pl.supply+=num;if(m.reward.includes('Command'))pl.cmd+=num;showToast(`MISSION: ${m.title}`);}}
+function checkVictory(){
+  const p1hq=Object.values(G.units).find(u=>u.type==='hq'&&u.player===1);
+  const p2hq=Object.values(G.units).find(u=>u.type==='hq'&&u.player===2);
+  if(!p1hq&&!p2hq){showVictory(0);return;}if(!p1hq){showVictory(2);return;}if(!p2hq){showVictory(1);return;}
+  if(G.mode==='domination'){[1,2].forEach(p=>{const ctrl=Object.values(G.objectiveControl).filter(v=>v===p).length;if(ctrl>=3){G._domCtrl[p]=(G._domCtrl[p]||0)+1;if(G._domCtrl[p]>=3)showVictory(p);}else G._domCtrl[p]=0;});}
+  if(G.players[1].morale<=0){showVictory(2);return;}if(G.players[2].morale<=0){showVictory(1);return;}
+}
+function showVictory(p){
+  const data={0:{title:'CEASEFIRE',body:'Both HQs destroyed. The battle ends in a draw.',emb:'🤝'},1:{title:'ALPHA VICTORIOUS',body:'ALPHA COMMAND has crushed the enemy. The field is ours.',emb:'🏆'},2:{title:'BRAVO VICTORIOUS',body:'BRAVO COMMAND secured total victory. Enemy HQ has fallen.',emb:'🎖'}};
+  const d=data[p];document.getElementById('modal-title').textContent=d.title;document.getElementById('modal-body').textContent=d.body;document.getElementById('modal-emblem').textContent=d.emb;document.getElementById('modal').classList.add('show');addLog(`=== ${d.title} ===`,'victory');
+}
+function endDeployPhase(){G.phase='battle';G.mode_action='move';G._turnDamage=0;addLog(`--- P${G.currentPlayer} BATTLE PHASE ---`,'info');render();}
+function endTurn(){
+  G._turnDamage=0;G.selected=null;G.mode_action='move';
+  G.objectives.forEach(obj=>{const k=`${obj.r},${obj.c}`;if(G.objectiveControl[k])G.players[G.objectiveControl[k]].supply+=1;});
+  G.currentPlayer=G.currentPlayer===1?2:1;
+  if(G.currentPlayer===1){G.turn++;[1,2].forEach(p=>{G.players[p].supply+=3;G.players[p].cmd=Math.min(10,G.players[p].cmd+2);});}
+  Object.values(G.units).filter(u=>u.player===G.currentPlayer).forEach(u=>{u.ap=UNIT_TYPES[u.type].ap;u.status=u.status.filter(s=>s==='fortified'||s==='overwatch');});
+  G.phase='deploy';
+  showTurnOverlay(()=>{render();if(G.vsAI&&G.currentPlayer===2)setTimeout(()=>aiTurn(),700);});
+}
+function showTurnOverlay(cb){
+  const ov=document.getElementById('turn-overlay');
+  document.getElementById('turn-overlay-text').textContent=`PLAYER ${G.currentPlayer} TURN`;
+  document.getElementById('turn-overlay-text').style.color=G.currentPlayer===1?'var(--blue-bright)':'var(--enemy-bright)';
+  document.getElementById('tovl-emb').textContent=G.currentPlayer===1?'🟢':'🔴';
+  document.getElementById('turn-overlay-sub').textContent=`TURN ${G.turn} — AWAITING ORDERS`;
+  ov.classList.add('show');
+  const bar=document.getElementById('tovl-prog');bar.style.animation='none';bar.offsetHeight;bar.style.animation='pfill 1.7s linear forwards';
+  setTimeout(()=>{ov.classList.remove('show');if(cb)cb();},1850);
+}
+function aiTurn(){
+  const pl=G.players[2];const myU=()=>Object.values(G.units).filter(u=>u.player===2);const enU=()=>Object.values(G.units).filter(u=>u.player===1);
+  if(G.phase==='deploy'){
+    const bc=[];for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(G.terrain[r][c]==='base-p2'&&!getUnitAt(r,c))bc.push([r,c]);
+    let dep=true;while(dep){dep=false;for(const t of['infantry','tank','sniper','medic','recon']){if(pl.supply>=UNIT_TYPES[t].cost&&bc.length>0){const[r,c]=bc.shift();pl.supply-=UNIT_TYPES[t].cost;const id='ai_'+Date.now()+Math.random();G.units[id]={id,type:t,player:2,row:r,col:c,hp:UNIT_TYPES[t].hp,maxHp:UNIT_TYPES[t].hp,ap:UNIT_TYPES[t].ap,status:[],overwatchActive:false};dep=true;addLog(`AI deployed ${UNIT_TYPES[t].name}`,'info');break;}}}
+    G.phase='battle';
+  }
+  const units=[...myU()];
+  units.forEach(unit=>{
+    if(unit.type==='hq')return;
+    const att=getAttackable(unit);if(att.length>0){const[ar,ac]=att[0];const tgt=getUnitAt(ar,ac);if(tgt)doAttack(unit,tgt);return;}
+    const enemies=enU();if(!enemies.length)return;
+    const nearest=enemies.reduce((b,e)=>{const d=Math.abs(e.row-unit.row)+Math.abs(e.col-unit.col);return d<b.d?{e,d}:b},{e:null,d:Infinity});
+    if(nearest.e){const reach=getReachable(unit);if(reach.length>0){reach.sort((a,b)=>(Math.abs(a[0]-nearest.e.row)+Math.abs(a[1]-nearest.e.col))-(Math.abs(b[0]-nearest.e.row)+Math.abs(b[1]-nearest.e.col)));doMove(unit,reach[0][0],reach[0][1]);const att2=getAttackable(unit);if(att2.length>0){const[ar2,ac2]=att2[0];const t2=getUnitAt(ar2,ac2);if(t2)doAttack(unit,t2);}}}
+  });
+  checkVictory();addLog('--- AI TURN COMPLETE ---','info');endTurn();
+}
+function setMode(mode){if(!G.selected){showToast('SELECT A UNIT FIRST');return;}G.mode_action=mode;render();}
+function selectUnitType(type){G.selectedUnitType=type;render();}
+function addLog(msg,type='info'){
+  G.log.push({msg,type});const scroll=document.getElementById('log-scroll');
+  const div=document.createElement('div');div.className=`log-entry ${type}`;div.textContent=`[T${G.turn}] ${msg}`;scroll.appendChild(div);scroll.scrollTop=scroll.scrollHeight;
+  if(G.log.length>120){scroll.removeChild(scroll.firstChild);G.log.shift();}
+}
+let toastTimer;
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2200);}
+function showTitle(){document.getElementById('title-screen').style.display='flex';document.getElementById('mode-screen').style.display='none';document.getElementById('game-screen').style.display='none';document.getElementById('modal').classList.remove('show');}
+function showModeSelect(){document.getElementById('title-screen').style.display='none';document.getElementById('mode-screen').style.display='flex';}
+function showHelp(){document.getElementById('help-screen').style.display='block';}
+function hideHelp(){document.getElementById('help-screen').style.display='none';}
+function startGame(mode,vsAI){
+  window.GAME_MODE=mode;window.VS_AI=vsAI;
+  document.getElementById('title-screen').style.display='none';document.getElementById('mode-screen').style.display='none';document.getElementById('game-screen').style.display='flex';document.getElementById('modal').classList.remove('show');document.getElementById('log-scroll').innerHTML='';
+  initState(mode,vsAI);buildGrid();render();
+  addLog('╔══ COMMAND GRID — OPERATION COMMENCING ══╗','event');addLog(`MODE: ${mode.toUpperCase()} | VS AI: ${vsAI}`,'info');addLog('PHASE 1: Deploy units in base zone, then COMMENCE BATTLE.','info');
+  showTurnOverlay(null);
+}
+showTitle();
+</script>
+</body>
+</html>
